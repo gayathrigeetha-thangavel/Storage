@@ -176,39 +176,40 @@ namespace Storage.Controllers
         {
             var products = await _context.Product.ToListAsync();
 
+            if (inputCategory == "Select Category")
+                inputCategory = string.Empty;
+
+            IEnumerable<Product> filteredProducts = products;
+
             if (!string.IsNullOrEmpty(inputName) && !string.IsNullOrEmpty(inputCategory))
             {
-                IEnumerable<Product> product = products.Where(product => product.Name == inputName && product.Category == inputCategory)
-                                                        .Select(product => new Product
-                {
-                    Name = product.Name,
-                    Price = product.Price,
-                    ProductCount = product.ProductCount,
-                    OrderDate = product.OrderDate,
-                    Description = product.Description,
-                    Shelf = product.Shelf,
-                    Category = product.Category
-                });
-                return View("Index", product);
+                filteredProducts = products.Where(product => product.Name.Contains(inputName, StringComparison.OrdinalIgnoreCase) && product.Category.Contains(inputCategory, StringComparison.OrdinalIgnoreCase));
+                                                        
             }
-            else if (!string.IsNullOrEmpty(inputName) && string.IsNullOrEmpty(inputCategory)) 
+            else if (!string.IsNullOrEmpty(inputName) && string.IsNullOrEmpty(inputCategory))
             {
-                IEnumerable<Product> product = products.Where(product => product.Name == inputName).Select(product => new Product
-                {
-                    Name = product.Name,
-                    Price = product.Price,
-                    ProductCount = product.ProductCount,
-                    OrderDate = product.OrderDate,
-                    Description = product.Description,
-                    Shelf = product.Shelf,
-                    Category = product.Category
-                });
-                return View("Index", product);
+                filteredProducts = products.Where(product => product.Name.Contains(inputName, StringComparison.OrdinalIgnoreCase));
+            }
+            else if (string.IsNullOrEmpty(inputName) && !string.IsNullOrEmpty(inputCategory))
+            {
+                filteredProducts = products.Where(product => product.Category.Contains(inputCategory, StringComparison.OrdinalIgnoreCase));
             }
             else
             {
                 return RedirectToAction(nameof(Index));
             }
+
+            var productFilteredList = filteredProducts.Select(product => new Product
+            {
+                Name = product.Name,
+                Price = product.Price,
+                ProductCount = product.ProductCount,
+                OrderDate = product.OrderDate,
+                Description = product.Description,
+                Shelf = product.Shelf,
+                Category = product.Category
+            });
+            return View("Index", productFilteredList);
         }
 
 
